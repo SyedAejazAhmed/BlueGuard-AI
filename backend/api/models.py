@@ -1,6 +1,7 @@
 from djongo import models
 
 class VesselTrack(models.Model):
+    id = models.BigAutoField(primary_key=True)
     vessel_id = models.CharField(max_length=50)
     mmsi = models.CharField(max_length=9)
     timestamp = models.DateTimeField()
@@ -14,6 +15,7 @@ class VesselTrack(models.Model):
         db_table = 'vessel_tracks'
 
 class ZoneViolation(models.Model):
+    id = models.BigAutoField(primary_key=True)
     vessel_id = models.CharField(max_length=50)
     zone_type = models.CharField(max_length=50)
     violation_time = models.DateTimeField()

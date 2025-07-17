@@ -27,6 +27,6 @@ django
 djangorestframework 
 django-cors-headers
 python-dotenv
-djongo
-pymongo>=4.0
+djongo==1.3.6 
+pymongo==3.12.3 
 django-mongodb-engine
