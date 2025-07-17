@@ -13,3 +13,5 @@ model/model_utils/fishing_trajectories/
 model/model_utils/kattegat_jan_mar/
 .env
 frontend/node_modules
+mongodb_config.txt
+backend/

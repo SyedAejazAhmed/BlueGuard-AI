@@ -39,3 +39,23 @@ const App = () => (
 );
 
 export default App;
+
+import { AuthProvider } from '@/contexts/AuthContext';
+import { RequireAuth } from '@/components/auth/RequireAuth';
+
+function App() {
+    return (
+        <AuthProvider>
+            <Router>
+                <Routes>
+                    <Route path="/login" element={<Login />} />
+                    <Route element={<RequireAuth />}>
+                        <Route path="/predict" element={<Predict />} />
+                        <Route path="/history" element={<UserPredictionHistory />} />
+                    </Route>
+                    <Route path="/" element={<Home />} />
+                </Routes>
+            </Router>
+        </AuthProvider>
+    );
+}
