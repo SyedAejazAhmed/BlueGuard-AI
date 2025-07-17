@@ -1,33 +1,26 @@
+import { apiClient } from './apiClient';
+import type { PredictionRequest, PredictionResponse } from './types';
 
-export async function predictAgent(data: any[], agentType: string) {
+export async function predictAgent(data: any[], agentType: string): Promise<PredictionResponse> {
   try {
-    const response = await fetch("http://localhost:8000/api/predict/", {
-      method: "POST",
-      headers: { 
-        "Content-Type": "application/json",
-        "Accept": "application/json"
-      },
-      body: JSON.stringify({ 
-        agent: agentType, 
-        data: data 
-      }),
-    });
+    const request: PredictionRequest = {
+      agent: agentType,
+      data: data
+    };
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const result = await response.json();
+    const result = await apiClient.predictBehavior(request);
     console.log("Prediction API response:", result);
     
     return result;
   } catch (error) {
     console.error("Prediction API error:", error);
-    // Return mock data for demo purposes
+    
+    // Return mock data for demo purposes (fallback)
     return {
-      success: true,
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
       agent_used: agentType,
-      processing_time: "0.15s",
+      processing_time: "0.00s",
       results: data.map((vessel, index) => ({
         ...vessel,
         behavior: Math.random() > 0.6 ? 'fishing' : 'transit',

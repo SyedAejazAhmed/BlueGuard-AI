@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Navbar } from "./components/Navbar";
 import { Footer } from "./components/Footer";
+import VesselAnalyzer from "./components/VesselAnalyzer";
 import Home from "./pages/Home";
 import Predict from "./pages/Predict";
 import ZoneViolation from "./pages/ZoneViolation";
@@ -28,6 +29,7 @@ const App = () => (
               <Route path="/predict" element={<Predict />} />
               <Route path="/zone" element={<ZoneViolation />} />
               <Route path="/about" element={<About />} />
+              <Route path="/analyzer" element={<VesselAnalyzer />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </main>

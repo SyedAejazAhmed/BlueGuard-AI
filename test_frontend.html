@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+    <h1>Backend API Test</h1>
+    <button onclick="testHealth()">Test Health</button>
+    <button onclick="testPrediction()">Test Prediction</button>
+    <button onclick="testZoneCheck()">Test Zone Check</button>
+    
+    <div id="results"></div>
+    
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        const results = document.getElementById('results');
+        
+        async function testHealth() {
+            try {
+                const response = await axios.get(`${API_BASE}/health`);
+                results.innerHTML = `<h3>Health Check:</h3><pre>${JSON.stringify(response.data, null, 2)}</pre>`;
+            } catch (error) {
+                results.innerHTML = `<h3>Health Check Error:</h3><pre>${error.message}</pre>`;
+            }
+        }
+        
+        async function testPrediction() {
+            try {
+                const data = {
+                    vessel_id: "TEST001",
+                    latitude: 12.34,
+                    longitude: 56.78,
+                    speed: 10.5,
+                    course: 180.0,
+                    vessel_type: "cargo"
+                };
+                
+                const response = await axios.post(`${API_BASE}/api/predict/`, data);
+                results.innerHTML = `<h3>Prediction Result:</h3><pre>${JSON.stringify(response.data, null, 2)}</pre>`;
+            } catch (error) {
+                results.innerHTML = `<h3>Prediction Error:</h3><pre>${error.response?.data || error.message}</pre>`;
+            }
+        }
+        
+        async function testZoneCheck() {
+            try {
+                const data = {
+                    latitude: 12.34,
+                    longitude: 56.78
+                };
+                
+                const response = await axios.post(`${API_BASE}/api/check-zone/`, data);
+                results.innerHTML = `<h3>Zone Check Result:</h3><pre>${JSON.stringify(response.data, null, 2)}</pre>`;
+            } catch (error) {
+                results.innerHTML = `<h3>Zone Check Error:</h3><pre>${error.response?.data || error.message}</pre>`;
+            }
+        }
+    </script>
+</body>
+</html>

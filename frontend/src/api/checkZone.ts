@@ -1,26 +1,20 @@
+import { apiClient } from './apiClient';
+import type { ZoneCheckRequest, ZoneCheckResponse } from './types';
 
-export async function checkZone(data: any[]) {
+export async function checkZone(data: any[]): Promise<ZoneCheckResponse> {
   try {
-    const response = await fetch("http://localhost:8000/api/check-zone/", {
-      method: "POST",
-      headers: { 
-        "Content-Type": "application/json",
-        "Accept": "application/json"
-      },
-      body: JSON.stringify({ data: data }),
-    });
+    const request: ZoneCheckRequest = {
+      data: data
+    };
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const result = await response.json();
+    const result = await apiClient.checkZoneViolations(request);
     console.log("Zone check API response:", result);
     
     return result;
   } catch (error) {
     console.error("Zone check API error:", error);
-    // Return mock data for demo purposes
+    
+    // Return mock data for demo purposes (fallback)
     const mockResults = data.map((vessel, index) => {
       const inMPA = Math.random() > 0.7;
       const inEEZ = Math.random() > 0.5;
@@ -42,12 +36,13 @@ export async function checkZone(data: any[]) {
     const eezViolations = mockResults.filter(r => r.in_eez && r.illegal_fishing && !r.in_mpa).length;
 
     return {
-      success: true,
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
       total_vessels: data.length,
       violations: violations,
       mpa_violations: mpaViolations,
       eez_violations: eezViolations,
-      processing_time: "0.08s",
+      processing_time: "0.00s",
       results: mockResults
     };
   }

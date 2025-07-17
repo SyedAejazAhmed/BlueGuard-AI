@@ -39,3 +39,35 @@ def assign_zone(df, zone_gdf, column_name, lon_col="LON", lat_col="LAT"):
     gdf = gpd.GeoDataFrame(gdf, geometry='geometry', crs="EPSG:4326")
     gdf[column_name] = gdf.within(zone_gdf.unary_union)
     return pd.DataFrame(gdf.drop(columns='geometry'))
+
+def check_zone_violation(latitude, longitude):
+    """
+    Checks if a single coordinate point falls within any of the defined zones.
+
+    Parameters:
+    - latitude (float): The latitude of the point.
+    - longitude (float): The longitude of the point.
+
+    Returns:
+    - dict: A dictionary with information about the zone violation.
+    """
+    zones = load_zone_shapefiles()
+    point = Point(longitude, latitude)
+    
+    for zone_type, zone_gdf in zones.items():
+        if point.within(zone_gdf.unary_union):
+            return {
+                "latitude": latitude,
+                "longitude": longitude,
+                "zone_type": zone_type,
+                "is_violation": True,
+                "zone_name": "Restricted Zone"
+            }
+            
+    return {
+        "latitude": latitude,
+        "longitude": longitude,
+        "zone_type": None,
+        "is_violation": False,
+        "zone_name": None
+    }
