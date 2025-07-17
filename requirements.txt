@@ -23,3 +23,10 @@ pyproj
 shapely
 rtree
 contextily
+django 
+djangorestframework 
+django-cors-headers
+python-dotenv
+djongo
+pymongo>=4.0
+django-mongodb-engine
