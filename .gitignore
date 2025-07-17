@@ -1,0 +1,13 @@
+data/
+geospatial/geofencing/shapefiles/eez_zones
+geospatial/geofencing/shapefiles/mpa_zones
+geospatial/geofencing/shapefiles/ports
+folder_workflow.txt
+dataset_links.txt
+document.pdf
+__pycache__/
+illegal_fish/
+.vscode/
+model/model_utils/ais/
+model/model_utils/fishing_trajectories/
+model/model_utils/kattegat_jan_mar/
