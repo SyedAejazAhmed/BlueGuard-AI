@@ -91,16 +91,6 @@ docker compose up --build
 * 🌐 Frontend → [http://localhost:8080](http://localhost:8080)
 * 🔌 Backend API → [http://localhost:8000/docs](http://localhost:8000/docs)
 
-### Common Commands
-
-```bash
-# Rebuild images from scratch
-docker compose build --no-cache
-
-# Stop & remove containers + volumes
-docker compose down --volumes --remove-orphans
-```
-
 ### Folder Volumes in Docker
 
 | Host Path               | Container Path  | Purpose                   |
