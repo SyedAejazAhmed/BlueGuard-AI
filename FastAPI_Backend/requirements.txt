@@ -1,0 +1,41 @@
+pandas==2.2.2
+numpy==1.26.4
+matplotlib==3.8.4
+seaborn==0.13.2
+scikit-learn==1.4.2
+xgboost==2.0.3
+umap-learn==0.5.5
+numba==0.59.1
+notebook
+torchsummary
+seaborn
+pillow
+imageio[ffmpeg]
+shap
+lime
+pyarrow
+dask[complete] 
+fastparquet
+geopy
+geopandas
+fiona
+pyproj
+shapely
+rtree
+contextily
+# django-mongodb-engine
+# Django==4.2.13
+# djangorestframework==3.14.0
+# django-cors-headers==4.3.1
+# python-dotenv==1.0.0
+# djongo==1.3.6
+# pymongo==3.12.3
+dnspython==2.4.2
+psycopg2-binary==2.9.7
+python-dateutil==2.8.2
+pytz==2023.3
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+python-multipart==0.0.6
+# logging==0.4.9.6
