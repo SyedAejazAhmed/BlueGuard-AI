@@ -1,13 +1,15 @@
 # BlueGuard AI - Illegal Fishing Detection
 
 ## Overview
-BlueGuard AI is a comprehensive maritime surveillance system designed to detect illegal fishing activities by combining advanced AI behavior classification with geospatial zone violation detection. The system consists of a FastAPI backend serving machine learning models and geospatial analysis, and a React frontend providing an interactive user interface.
+
+BlueGuard AI is a comprehensive maritime surveillance system designed to detect illegal fishing activities by combining advanced AI behavior classification with geospatial zone‑violation detection. The system consists of a **FastAPI** backend serving machine‑learning models and geospatial analysis, and a **React (Vite)** frontend providing an interactive user interface.
 
 ---
 
 ## Project Setup
 
 ### Clone the repository
+
 ```bash
 git clone https://github.com/SyedAejazAhmed/matsyan-BlueGuard-AI.git
 cd matsyan-BlueGuard-AI
@@ -17,113 +19,142 @@ cd matsyan-BlueGuard-AI
 
 ## Project Structure
 
-- **FastAPI_Backend/**: Backend API server with endpoints for prediction, zone checking, vessel analysis, and AIS data upload.
-- **frontend/**: React frontend application built with Vite, providing UI components and pages for interacting with the system.
-- **model/**: Machine learning models and utilities for vessel behavior prediction and anomaly detection.
-- **geospatial/**: Geospatial analysis modules for zone violation detection.
-- **data/**: Sample and input data files.
+| Folder                | Description                                                              |
+| --------------------- | ------------------------------------------------------------------------ |
+| **FastAPI_Backend/**  | Backend API server (prediction, zone check, vessel analysis, AIS upload) |
+| **frontend/**         | React + Vite UI                                                          |
+| **model/**            | Machine‑learning models & utilities                                      |
+| **geospatial/**       | Zone‑violation detection modules                                         |
+| **data/**             | Sample & input data files                                                |
 
 ---
 
 ## Prerequisites
 
-- Python 3.8+
-- Node.js 16+
-- npm or yarn
+* **Python 3.8+**
+* **Node.js 16+**
+* **npm** or **yarn**
 
 ---
 
-## Backend Setup
+## Backend Setup (without Docker)
 
-1. Create and activate a Python virtual environment:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
+```bash
+# 1. Create & activate virtual env
+python -m venv venv
+source venv/bin/activate      # Windows: venv\Scripts\activate
 
-2. Install Python dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
+# 2. Install dependencies
+pip install -r requirements.txt
 
-3. Run the FastAPI backend server:
-   ```bash
-   uvicorn FastAPI_Backend.main:app --reload --host 0.0.0.0 --port 8000
-   ```
+# 3. Run FastAPI server
+uvicorn FastAPI_Backend.main:app --reload --host 0.0.0.0 --port 8000
+```
 
 ---
 
-## Frontend Setup
+## Frontend Setup (without Docker)
 
-1. Navigate to the frontend directory:
-   ```bash
-   cd frontend
-   ```
-
-2. Install Node.js dependencies:
-   ```bash
-   npm install
-   ```
-
-3. Start the frontend development server:
-   ```bash
-   npm run dev
-   ```
-
-4. Access the frontend UI at:
-   ```
-   http://localhost:8080
-   ```
+```bash
+cd frontend
+npm install
+npm run dev          # Opens on http://localhost:8080
+```
 
 ---
 
 ## Environment Variables
 
-- Frontend uses Vite environment variables prefixed with `VITE_`.
-- Backend configuration can be adjusted in `FastAPI_Backend/main.py` and related config files.
+* Frontend uses **Vite** env variables prefixed with `VITE_`.
+* Backend settings can be tuned in `FastAPI_Backend/main.py` (CORS, etc.).
+
+---
+
+## 🐳 Docker Deployment
+
+### Prereqs
+
+* [Docker](https://docs.docker.com/get-docker/)
+* [Docker Compose](https://docs.docker.com/compose/)
+
+### Quick Start
+
+```bash
+git clone https://github.com/SyedAejazAhmed/matsyan-BlueGuard-AI.git
+cd matsyan-BlueGuard-AI
+docker compose up --build
+```
+
+### Access
+
+* 🌐 Frontend → [http://localhost:8080](http://localhost:8080)
+* 🔌 Backend API → [http://localhost:8000/docs](http://localhost:8000/docs)
+
+### Common Commands
+
+```bash
+# Rebuild images from scratch
+docker compose build --no-cache
+
+# Stop & remove containers + volumes
+docker compose down --volumes --remove-orphans
+```
+
+### Folder Volumes in Docker
+
+| Host Path               | Container Path  | Purpose                   |
+| ----------------------- | --------------- | ------------------------- |
+| `FastAPI_Backend/`      | `/app`          | FastAPI backend           |
+| `frontend/`             | `/app`          | React UI                  |
+| `model/`, `geospatial/` | mounted volumes | Models & geospatial logic |
 
 ---
 
 ## Usage
 
-- Use the frontend UI to navigate between pages:
-  - Home: Overview and feature highlights.
-  - Predict: Submit vessel data for behavior prediction.
-  - Zone Detection: Check if coordinates violate protected zones.
-  - Analyzer: Comprehensive vessel analysis.
-  - About: Project information.
+### Frontend Pages
 
-- Backend API endpoints:
-  - `/api/predict/`: POST vessel data for prediction.
-  - `/api/check-zone/`: POST coordinates for zone violation check.
-  - `/api/analyze-vessel/`: POST vessel data for full analysis.
-  - `/api/upload-ais/`: POST AIS data file upload.
-  - `/health`: GET health status.
+* **Home** – Overview & features
+* **Predict** – Vessel behavior prediction
+* **Zone Detection** – Protected‑zone check
+* **Analyzer** – Full vessel analysis
+* **About** – Project details
+
+### Key Backend Endpoints
+
+| Route                  | Method | Purpose              |
+| ---------------------- | ------ | -------------------- |
+| `/api/predict/`        | POST   | Behavior prediction  |
+| `/api/check-zone/`     | POST   | Zone‑violation check |
+| `/api/analyze-vessel/` | POST   | Full analysis        |
+| `/api/upload-ais/`     | POST   | Upload AIS CSV       |
+| `/health`              | GET    | Health probe         |
 
 ---
 
 ## Testing
 
-- Backend endpoints can be tested using tools like Curl or Postman.
-- Frontend UI can be tested by interacting with all pages and verifying API integration.
-- Ensure backend server is running before starting frontend.
+* Use **Swagger** at `/docs` or **Postman/Curl** for backend routes.
+* Verify frontend pages call backend successfully (watch dev console).
 
 ---
 
 ## Troubleshooting
 
-- If frontend shows errors related to environment variables, ensure `.env` files are set correctly and use `import.meta.env` in frontend code.
-- Clear frontend cache by deleting `node_modules/.vite` if build issues occur.
-- Verify CORS settings in backend to allow frontend origin.
+| Issue               | Fix                                            |
+| ------------------- | ---------------------------------------------- |
+| Frontend env errors | Ensure `.env` files & `import.meta.env` usage  |
+| Build cache issues  | Delete `node_modules/.vite` then `npm run dev` |
+| CORS errors         | Adjust CORS settings in `main.py`              |
 
 ---
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE.md](LICENSE.md) file for details.
+MIT – see [LICENSE.md](LICENSE.md) for full text.
 
 ---
 
 ## Contact
 
-For questions or support, please contact the development team.
+Questions or support? Open an issue or reach out to the BlueGuard AI development team.

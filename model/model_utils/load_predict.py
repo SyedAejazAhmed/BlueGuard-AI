@@ -10,7 +10,8 @@ from fastapi import APIRouter, Body
 from pydantic import BaseModel
 
 # Base directory where all models are saved
-MODEL_BASE_DIR = r"D:\Projects\Hackathon\Agentic Hackathon\model\model_utils"
+MODEL_BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 
 # Define subdirectories for each dataset model group
 AIS_DIR = os.path.join(MODEL_BASE_DIR, "ais")
