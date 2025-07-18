@@ -31,9 +31,9 @@ cd matsyan-BlueGuard-AI
 
 ## Prerequisites
 
-* **Python 3.8+**
-* **Node.js 16+**
-* **npm** or **yarn**
+* **Python 3.8+** # Recommended Python version 3.11.9
+* **Node.js 16+** # Recommended Node version v22.16.0
+* **npm** or **yarn** # Recommended npm version 10.9.2
 
 ---
 
@@ -42,8 +42,9 @@ cd matsyan-BlueGuard-AI
 ```bash
 # 1. Create & activate virtual env
 python -m venv venv
-source venv/bin/activate      # Windows: venv\Scripts\activate
+source venv/bin/activate # For Linux and macOS    
 
+venv\Scripts\activate  # For Windows
 # 2. Install dependencies
 pip install -r requirements.txt
 
