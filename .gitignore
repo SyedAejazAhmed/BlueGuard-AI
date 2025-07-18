@@ -16,3 +16,6 @@ frontend/node_modules
 mongodb_config.txt
 backend/
 zone_violation_input_data.txt
+model/anomaly_detection/ais.py
+model/anomaly_detection/ais_outputs/shap/
+model/anomaly_detection/ais_outputs/lime/
