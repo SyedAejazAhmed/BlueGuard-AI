@@ -5,6 +5,16 @@ BlueGuard AI is a comprehensive maritime surveillance system designed to detect 
 
 ---
 
+## Project Setup
+
+### Clone the repository
+```bash
+git clone https://github.com/SyedAejazAhmed/matsyan-BlueGuard-AI.git
+cd matsyan-BlueGuard-AI
+```
+
+---
+
 ## Project Structure
 
 - **FastAPI_Backend/**: Backend API server with endpoints for prediction, zone checking, vessel analysis, and AIS data upload.
@@ -20,7 +30,6 @@ BlueGuard AI is a comprehensive maritime surveillance system designed to detect 
 - Python 3.8+
 - Node.js 16+
 - npm or yarn
-- MongoDB (if using database features)
 
 ---
 
@@ -37,12 +46,7 @@ BlueGuard AI is a comprehensive maritime surveillance system designed to detect 
    pip install -r requirements.txt
    ```
 
-3. (Optional) Setup MongoDB if required:
-   ```bash
-   python setup_mongodb.py
-   ```
-
-4. Run the FastAPI backend server:
+3. Run the FastAPI backend server:
    ```bash
    uvicorn FastAPI_Backend.main:app --reload --host 0.0.0.0 --port 8000
    ```
