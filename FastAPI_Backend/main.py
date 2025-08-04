@@ -248,18 +248,36 @@ async def call_model_prediction(input_data: Dict[str, Any]) -> Dict[str, Any]:
     # Adapt this to match your existing model interface
     
     try:
-        # Example structure - adapt to your actual model calls
-        from model.model_utils.load_predict import predict_vessel_behavior
+        # Import the agent router from load_predict.py
+        from model.model_utils.load_predict import agent_router
+        import pandas as pd
         
-        predictions = predict_vessel_behavior(input_data)
+        # Convert to DataFrame as expected by the model
+        # Map the input data to the required features for the AIS agent
+        input_df = pd.DataFrame([{
+            'SOG': input_data.get('speed', 0),
+            'COG': input_data.get('course', 0),
+            'Heading': 0,  # Default value
+            'Length': 0,   # Default value
+            'Width': 0,    # Default value
+            'Draft': 0,    # Default value
+        }])
         
-        return {
-            'vessel_type_prediction': predictions.get('vessel_type'),
-            'anomaly_score': predictions.get('anomaly_score', 0.0),
-            'fishing_probability': predictions.get('fishing_prob', 0.0),
-            'confidence': predictions.get('confidence', 0.0),
-            'trajectory_prediction': predictions.get('trajectory')
-        }
+        # Use the agent router to make the prediction
+        predictions = agent_router.route_prediction(input_df)
+        
+        # Extract the relevant information from the prediction result
+        if predictions.get('success', False):
+            return {
+                'vessel_type_prediction': predictions.get('prediction', 'unknown'),
+                'anomaly_score': 0.0,  # Default value
+                'fishing_probability': 0.0,  # Default value
+                'confidence': predictions.get('confidence', 0.0),
+                'trajectory_prediction': 'unknown'
+            }
+        else:
+            # If prediction failed, return the error
+            return {'error': predictions.get('error', 'Unknown prediction error')}
         
     except Exception as e:
         logger.error(f"Model prediction error: {str(e)}")
