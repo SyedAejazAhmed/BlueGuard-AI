@@ -3,6 +3,8 @@ import { MapContainer, TileLayer, Marker, Popup, GeoJSON } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import "./MapView.css";
+import { ExportButton } from "@/components/ExportButton";
+import { FileDown } from 'lucide-react';
 
 // Fix Leaflet default icon issues
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -112,7 +114,33 @@ interface VesselMarker {
   vessel_id?: string;
 }
 
-export const MapView = ({ vessels, layers }: MapViewProps) => {
+interface MapViewProps {
+  vessels: Array<{
+    latitude: number;
+    longitude: number;
+    behavior?: string;
+    illegal_fishing?: boolean;
+    vessel_id?: string;
+  }>;
+  layers: {
+    mpa: boolean;
+    eez: boolean;
+    ports: boolean;
+  };
+  isLoading?: boolean;
+  error?: string | null;
+  predictions?: any[];
+  zoneViolations?: any[];
+}
+
+export const MapView = ({ 
+  vessels, 
+  layers, 
+  isLoading = false, 
+  error = null,
+  predictions,
+  zoneViolations 
+}: MapViewProps) => {
   // Filter and validate vessels
   const validVessels: VesselMarker[] = vessels?.filter(vessel => {
     // Make sure coordinates exist and are valid numbers
@@ -190,32 +218,98 @@ export const MapView = ({ vessels, layers }: MapViewProps) => {
         ))}
       </MapContainer>
 
-      {/* Map Legend */}
-      <div className="absolute bottom-4 left-4 bg-white p-3 rounded-lg shadow-lg text-xs z-[1000]">
-        <div className="font-medium mb-2">Legend</div>
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-blue-600 rounded-full" />
-            <span>Normal Vessel</span>
+      {/* Controls and Legend */}
+      <div className="absolute bottom-4 left-4 flex flex-col gap-4 z-[1000]">
+        {/* Download Controls - Only shown when results are available */}
+        {(predictions?.length > 0 || zoneViolations?.length > 0) && (
+          <div className="bg-white p-3 rounded-lg shadow-lg space-y-2">
+            <div className="font-medium mb-2 text-xs flex items-center gap-2">
+              <FileDown className="h-4 w-4 text-blue-500" />
+              <span>Analysis Results</span>
+            </div>
+            <div className="flex flex-col gap-2">
+              {predictions && predictions.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <ExportButton
+                    data={predictions}
+                    filename="vessel-predictions"
+                    buttonText={`Export Predictions (${predictions.length})`}
+                    className="w-full justify-start text-left hover:bg-blue-50"
+                    icon={<FileDown className="h-4 w-4 text-blue-500" />}
+                  />
+                </div>
+              )}
+              {zoneViolations && zoneViolations.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <ExportButton
+                    data={zoneViolations}
+                    filename="zone-violations"
+                    buttonText={`Export Violations (${zoneViolations.length})`}
+                    className="w-full justify-start text-left hover:bg-red-50"
+                    icon={<FileDown className="h-4 w-4 text-red-500" />}
+                  />
+                </div>
+              )}
+              <div className="text-xs text-slate-500 mt-1">
+                Click to download in JSON or CSV format
+              </div>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-orange-500 rounded-full" />
-            <span>Fishing Vessel</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-red-600 rounded-full animate-pulse" />
-            <span>Violation Detected</span>
+        )}
+
+        {/* Map Legend */}
+        <div className="bg-white p-3 rounded-lg shadow-lg text-xs">
+          <div className="font-medium mb-2">Legend</div>
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-blue-600 rounded-full" />
+              <span>Normal Vessel</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-orange-500 rounded-full" />
+              <span>Fishing Vessel</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-red-600 rounded-full animate-pulse" />
+              <span>Violation Detected</span>
+            </div>
           </div>
         </div>
       </div>
 
+      {/* Loading State */}
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center z-[1000] bg-white/50 backdrop-blur-sm">
+          <div className="bg-white p-6 rounded-lg shadow-lg text-center">
+            <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+            <div className="text-slate-700">Loading vessel data...</div>
+          </div>
+        </div>
+      )}
+
+      {/* Error Message */}
+      {error && (
+        <div className="absolute top-4 right-4 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg shadow-lg z-[1000] max-w-md">
+          <div className="flex items-center gap-2">
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <span className="font-medium">Error loading data</span>
+          </div>
+          <p className="mt-1 text-sm">{error}</p>
+        </div>
+      )}
+
       {/* No vessels message */}
-      {vessels.length === 0 && (
+      {!isLoading && !error && vessels.length === 0 && (
         <div className="absolute inset-0 flex items-center justify-center z-[1000] pointer-events-none">
-          <div className="bg-white p-4 rounded-lg shadow-lg text-center">
-            <div className="text-slate-600">No vessel data to display</div>
-            <div className="text-sm text-slate-500 mt-1">
-              Upload vessel data to see positions on map
+          <div className="bg-white p-6 rounded-lg shadow-lg text-center">
+            <svg className="h-12 w-12 text-slate-400 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+            </svg>
+            <div className="text-slate-700 text-lg font-medium">No vessel data to display</div>
+            <div className="text-slate-500 mt-2">
+              Upload vessel data or select a date range to see positions on map
             </div>
           </div>
         </div>

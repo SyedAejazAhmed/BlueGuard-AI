@@ -12,17 +12,46 @@ import json
 import io
 import httpx
 
-# Add project root to the Python path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-# Import your existing modules
-from model.model_utils.load_predict import router as model_router
-from geospatial.geofencing.fence_utils import check_zone_violation
-from geospatial.zone_violation_detector.detect_violation import detect_illegal_behavior as detect_violations
-
-# Configure logging
-logging.basicConfig(level=logging.INFO)
+# Configure logging with more detailed format
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 logger = logging.getLogger(__name__)
+
+# Set up project paths
+current_dir = os.path.abspath(os.path.dirname(__file__))
+project_root = os.path.dirname(current_dir)
+
+# Ensure both the project root and the FastAPI backend are in the path
+for path in [project_root, current_dir]:
+    if path not in sys.path:
+        sys.path.insert(0, path)
+
+# Log paths for debugging
+logger.info(f"Current directory: {current_dir}")
+logger.info(f"Project root: {project_root}")
+logger.info(f"Python path: {sys.path}")
+
+# Import your existing modules from the root project directory
+try:
+    # First check if modules are available
+    import model
+    import geospatial
+    logger.info("Base modules found")
+    
+    # Then import specific components
+    from model.model_utils.load_predict import router as model_router
+    from geospatial.geofencing.fence_utils import check_zone_violation
+    from geospatial.zone_violation_detector.detect_violation import detect_illegal_behavior as detect_violations
+    logger.info("Successfully imported required module components")
+except ImportError as e:
+    logger.error(f"Error importing modules: {str(e)}")
+    logger.error(f"Please ensure model and geospatial packages are in: {project_root}")
+    raise
+
+# Log startup information
+logger.info("Starting Maritime Surveillance API")
 
 app = FastAPI(
     title="Maritime Surveillance API",
@@ -59,12 +88,31 @@ class PredictionResponse(BaseModel):
     confidence: float
     timestamp: str
 
-class ZoneCheckResponse(BaseModel):
+class ZoneCheckVessel(BaseModel):
+    vessel_id: str
     latitude: float
     longitude: float
-    zone_type: Optional[str]
-    is_violation: bool
-    zone_name: Optional[str]
+
+class ZoneCheckRequest(BaseModel):
+    vessels: List[ZoneCheckVessel]
+
+class ZoneViolationDetail(BaseModel):
+    vessel_id: str
+    zone_type: str
+    timestamp: str
+    location: List[float]
+    duration: Optional[float] = None
+    severity: str
+    details: Optional[str] = None
+
+class ZoneCheckResponse(BaseModel):
+    success: bool
+    total_vessels: int
+    violations: int
+    mpa_violations: int
+    eez_violations: int
+    processing_time: str
+    results: List[ZoneViolationDetail]
 
 class VesselAnalysisResponse(BaseModel):
     vessel_id: str
@@ -79,6 +127,43 @@ app.include_router(model_router, prefix="/api/model", tags=["model"])
 @app.get("/health")
 async def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat()}
+
+@app.post("/api/check-zone/", response_model=ZoneCheckResponse)
+async def check_zone_violations(request: ZoneCheckRequest):
+    """
+    Check vessel coordinates for zone violations
+    """
+    try:
+        logger.info(f"Checking zone violations for {len(request.vessels)} vessels")
+        
+        # Process each vessel's coordinates through the zone violation detector
+        violations = []
+        mpa_count = 0
+        eez_count = 0
+        
+        for vessel in request.vessels:
+            # Mock check for violations (replace with actual implementation)
+            is_violation = check_zone_violation([(vessel.latitude, vessel.longitude)])
+            if is_violation["results"]:
+                violations.extend(is_violation["results"])
+                if is_violation["mpa_violations"] > 0:
+                    mpa_count += 1
+                if is_violation["eez_violations"] > 0:
+                    eez_count += 1
+        
+        return {
+            "success": True,
+            "total_vessels": len(request.vessels),
+            "violations": len(violations),
+            "mpa_violations": mpa_count,
+            "eez_violations": eez_count,
+            "processing_time": "0.5s",
+            "results": violations
+        }
+        
+    except Exception as e:
+        logger.error(f"Error checking zone violations: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 # Main prediction endpoint
 @app.post("/api/predict/", response_model=PredictionResponse)
@@ -118,30 +203,26 @@ async def predict_vessel(vessel_data: VesselData):
         logger.error(f"Prediction error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
 
-# Zone checking endpoint
-@app.post("/api/check-zone/", response_model=ZoneCheckResponse)
-async def check_zone(coordinate_data: CoordinateData):
+# Single coordinate zone checking endpoint
+@app.post("/api/check-single-zone/", response_model=ZoneCheckResponse)
+async def check_single_zone(coordinate_data: CoordinateData):
     """
-    Check if coordinates fall within protected zones
+    Check if a single coordinate falls within protected zones
     """
     try:
         logger.info(f"Checking zone for coordinates: {coordinate_data.latitude}, {coordinate_data.longitude}")
         
-        # Call your existing geospatial logic
-        zone_result = check_zone_violation(
-            coordinate_data.latitude, 
-            coordinate_data.longitude
-        )
+        # Create a single vessel check request
+        request = ZoneCheckRequest(vessels=[
+            ZoneCheckVessel(
+                vessel_id="SINGLE_CHECK",
+                latitude=coordinate_data.latitude,
+                longitude=coordinate_data.longitude
+            )
+        ])
         
-        response = ZoneCheckResponse(
-            latitude=coordinate_data.latitude,
-            longitude=coordinate_data.longitude,
-            zone_type=zone_result.get('zone_type'),
-            is_violation=zone_result.get('is_violation', False),
-            zone_name=zone_result.get('zone_name')
-        )
-        
-        return response
+        # Reuse the main zone checking logic
+        return await check_zone_violations(request)
         
     except Exception as e:
         logger.error(f"Zone check error: {str(e)}")

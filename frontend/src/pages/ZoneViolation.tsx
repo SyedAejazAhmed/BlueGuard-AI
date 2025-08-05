@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { MapPin, Upload, AlertTriangle, Shield, FileText, Globe } from "lucide-react";
+import { MapPin, Upload, AlertTriangle, Shield, FileText, Globe, FileDown } from "lucide-react";
 import type { ZoneCheckResponse } from "@/api/types";
+import { toast } from "@/components/ui/use-toast";
+import { downloadData } from "@/utils/downloadUtils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -11,17 +13,85 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { MapView } from "@/components/MapView";
+
+interface LocalViolationDetail {
+  vessel_id: string;
+  timestamp: string;
+  latitude: number;
+  longitude: number;
+  behavior: string;
+  in_mpa: boolean;
+  in_eez: boolean;
+  in_port: boolean;
+  illegal_fishing?: boolean;
+  risk_level?: 'low' | 'medium' | 'high';
+}
+
+interface LocalZoneResults {
+  total_vessels: number;
+  violations: number;
+  mpa_violations: number;
+  eez_violations: number;
+  results: LocalViolationDetail[];
+}
+
+interface MapViewVessel {
+  vessel_id?: string;
+  latitude: number;
+  longitude: number;
+  behavior?: string;
+  illegal_fishing?: boolean;
+}
+
+const mapApiResponseToLocalFormat = (response: ZoneCheckResponse): LocalZoneResults => {
+  return {
+    total_vessels: response.total_vessels,
+    violations: response.violations,
+    mpa_violations: response.mpa_violations,
+    eez_violations: response.eez_violations,
+    results: response.results.map(detail => ({
+      vessel_id: detail.vessel_id,
+      timestamp: detail.timestamp,
+      latitude: detail.location[0],
+      longitude: detail.location[1],
+      behavior: detail.details || 'unknown',
+      in_mpa: detail.zone_type === 'mpa',
+      in_eez: detail.zone_type === 'eez',
+      in_port: false, // API doesn't provide this information
+      risk_level: detail.severity,
+      illegal_fishing: detail.severity === 'high'
+    }))
+  };
+};
 import { Loader } from "@/components/Loader";
 import { checkZone } from "@/api/checkZone";
-import { toast } from "sonner";
 import { fetchCSV } from "@/api/apiService";
 
 const ZoneViolation = () => {
   const [loading, setLoading] = useState(false);
+
+  const handleExport = (format: 'json' | 'csv') => {
+    if (!zoneResults?.results?.length) return;
+
+    try {
+      downloadData(zoneResults.results, {
+        filename: `zone-violations-${new Date().toISOString().split('T')[0]}`,
+        type: format,
+        includeTimestamp: true
+      });
+    } catch (error) {
+      console.error('Export failed:', error);
+      toast({
+        variant: "destructive",
+        title: "Export Failed",
+        description: "Failed to export the data. Please try again."
+      });
+    }
+  };
   const [csvData, setCsvData] = useState("");
   const [urlInput, setUrlInput] = useState("");
   const [uploadType, setUploadType] = useState("device");
-  const [zoneResults, setZoneResults] = useState<ZoneCheckResponse | null>(null);
+    const [zoneResults, setZoneResults] = useState<LocalZoneResults | null>(null);
   const [mapLayers, setMapLayers] = useState({
     mpa: true,
     eez: true,
@@ -34,33 +104,55 @@ const ZoneViolation = () => {
       const reader = new FileReader();
       reader.onload = (e) => {
         setCsvData(e.target?.result as string || "");
-        toast.success("CSV file loaded successfully!");
+              toast({
+        title: "Success",
+        description: "CSV file loaded successfully!"
+      });
       };
       reader.readAsText(file);
     } else {
-      toast.error("Please select a valid CSV file");
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please select a valid CSV file"
+      });
     }
   };
 
   const handleUrlFetch = async () => {
     if (!urlInput.trim()) {
-      toast.error("Please enter a valid URL");
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please enter a valid URL"
+      });
       return;
     }
 
     try {
       const csvContent = await fetchCSV(urlInput);
       setCsvData(csvContent);
-      toast.success("CSV data fetched from URL successfully!");
+      toast({
+        title: "Success",
+        description: "CSV data fetched from URL successfully!"
+      });
     } catch (error) {
       console.error("URL fetch error:", error);
-      toast.error("Failed to fetch CSV from URL. Please check the URL and try again.");
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to fetch CSV from URL. Please check the URL and try again."
+      });
     }
   };
 
   const handleZoneCheck = async () => {
     if (!csvData.trim()) {
-      toast.error("Please enter or upload vessel data");
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please enter or upload vessel data"
+      });
       return;
     }
 
@@ -78,7 +170,11 @@ const ZoneViolation = () => {
         const lonIndex = headers.indexOf('longitude');
         
         if (latIndex === -1 || lonIndex === -1) {
-          toast.error("CSV must contain 'latitude' and 'longitude' columns");
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "CSV must contain 'latitude' and 'longitude' columns"
+          });
           return;
         }
 
@@ -86,7 +182,11 @@ const ZoneViolation = () => {
           .map((line, lineNum) => {
             const values = line.split(',').map(v => v.trim());
             if (values.length !== headers.length) {
-              toast.error(`Invalid CSV line ${lineNum + 2}: Wrong number of columns`);
+              toast({
+                variant: "destructive",
+                title: "Error",
+                description: `Invalid CSV line ${lineNum + 2}: Wrong number of columns`
+              });
               return null;
             }
             
@@ -94,12 +194,20 @@ const ZoneViolation = () => {
             const lon = Number(values[lonIndex]);
             
             if (isNaN(lat) || isNaN(lon)) {
-              toast.error(`Invalid coordinates at line ${lineNum + 2}`);
+              toast({
+                variant: "destructive",
+                title: "Error",
+                description: `Invalid coordinates at line ${lineNum + 2}`
+              });
               return null;
             }
             
             if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
-              toast.error(`Coordinates out of range at line ${lineNum + 2}`);
+              toast({
+                variant: "destructive",
+                title: "Error",
+                description: `Coordinates out of range at line ${lineNum + 2}`
+              });
               return null;
             }
 
@@ -116,16 +224,27 @@ const ZoneViolation = () => {
           .filter((item): item is Record<string, any> => item !== null);
 
         if (data.length === 0) {
-          toast.error("No valid vessel data found in CSV");
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "No valid vessel data found in CSV"
+          });
           return;
         }
 
       const result = await checkZone(data);
-      setZoneResults(result);
-      toast.success("Zone analysis completed!");
+      setZoneResults(mapApiResponseToLocalFormat(result));
+      toast({
+        title: "Success",
+        description: "Zone analysis completed!"
+      });
     } catch (error) {
       console.error("Zone check error:", error);
-      toast.error("Failed to analyze zones. Displaying mock data.");
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to analyze zones. Displaying mock data."
+      });
       if (error.results) {
         setZoneResults(error);
       }
@@ -390,14 +509,38 @@ const ZoneViolation = () => {
         {zoneResults && (
           <div className="mt-12">
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <AlertTriangle className="h-5 w-5 text-red-600" />
-                  Zone Violation Results
-                </CardTitle>
-                <CardDescription>
-                  Detailed analysis of vessel positions and zone violations
-                </CardDescription>
+              <CardHeader className="flex flex-row justify-between items-start gap-4">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <AlertTriangle className="h-5 w-5 text-red-600" />
+                    Zone Violation Results
+                  </CardTitle>
+                  <CardDescription>
+                    Detailed analysis of vessel positions and zone violations
+                  </CardDescription>
+                </div>
+                {zoneResults.results && zoneResults.results.length > 0 && (
+                  <div className="flex gap-2 min-w-fit">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-2"
+                      onClick={() => handleExport('json')}
+                    >
+                      <FileDown className="h-4 w-4" />
+                      Export JSON
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-2"
+                      onClick={() => handleExport('csv')}
+                    >
+                      <FileDown className="h-4 w-4" />
+                      Export CSV
+                    </Button>
+                  </div>
+                )}
               </CardHeader>
               <CardContent>
                 <div className="overflow-x-auto">

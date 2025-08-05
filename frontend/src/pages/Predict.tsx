@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Upload, Brain, Ship, BarChart3, Link as LinkIcon } from "lucide-react";
+import { Upload, Brain, Ship, BarChart3, Link as LinkIcon, FileDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { downloadData } from "@/utils/downloadUtils";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -11,13 +12,32 @@ import { Badge } from "@/components/ui/badge";
 import { VesselCard } from "@/components/VesselCard";
 import { Loader } from "@/components/Loader";
 import { predictAgent } from "@/api/predictAgent";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/use-toast";
 import { fetchCSV } from "@/api/apiService";
 
 const Predict = () => {
   const [loading, setLoading] = useState(false);
   const [agentType, setAgentType] = useState("");
   const [inputMethod, setInputMethod] = useState("manual");
+
+  const handleExport = (format: 'json' | 'csv') => {
+    if (!predictions?.results?.length) return;
+
+    try {
+      downloadData(predictions.results, {
+        filename: `vessel-predictions-${new Date().toISOString().split('T')[0]}`,
+        type: format,
+        includeTimestamp: true
+      });
+    } catch (error) {
+      console.error('Export failed:', error);
+      toast({
+        title: "Export failed",
+        description: "Failed to export the data. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
   const [uploadMethod, setUploadMethod] = useState("device");
   const [csvUrl, setCsvUrl] = useState("");
   const [vesselData, setVesselData] = useState({
@@ -39,7 +59,11 @@ const Predict = () => {
 
   const handlePredict = async () => {
     if (!agentType) {
-      toast.error("Please select an agent type");
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please select an agent type"
+      });
       return;
     }
 
@@ -48,14 +72,22 @@ const Predict = () => {
       let data;
       if (inputMethod === "manual") {
         if (!vesselData.sog || !vesselData.cog || !vesselData.latitude || !vesselData.longitude) {
-          toast.error("Please fill in all required fields");
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Please fill in all required fields"
+          });
           setLoading(false);
           return;
         }
         data = [vesselData];
       } else {
         if (!csvData.trim()) {
-          toast.error("Please enter CSV data");
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Please enter CSV data"
+          });
           setLoading(false);
           return;
         }
@@ -74,10 +106,17 @@ const Predict = () => {
 
       const result = await predictAgent(data, agentType);
       setPredictions(result);
-      toast.success("Prediction completed successfully!");
+      toast({
+        title: "Success",
+        description: "Prediction completed successfully!"
+      });
     } catch (error) {
       console.error("Prediction error:", error);
-      toast.error("Failed to get prediction. Please try again.");
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to get prediction. Please try again."
+      });
     } finally {
       setLoading(false);
     }
@@ -85,7 +124,11 @@ const Predict = () => {
 
   const handleUrlFetch = async () => {
     if (!csvUrl.trim()) {
-      toast.error("Please enter a valid URL");
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please enter a valid URL"
+      });
       return;
     }
 
@@ -399,6 +442,30 @@ const Predict = () => {
                   <BarChart3 className="h-5 w-5" />
                   Prediction Results
                 </CardTitle>
+                <div className="flex justify-end">
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-2"
+                      onClick={() => handleExport('json')}
+                      disabled={!predictions?.results?.length}
+                    >
+                      <FileDown className="h-4 w-4" />
+                      Export JSON
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-2"
+                      onClick={() => handleExport('csv')}
+                      disabled={!predictions?.results?.length}
+                    >
+                      <FileDown className="h-4 w-4" />
+                      Export CSV
+                    </Button>
+                  </div>
+                </div>
                 <CardDescription>
                   AI analysis results using {agents.find(a => a.value === agentType)?.label}
                 </CardDescription>

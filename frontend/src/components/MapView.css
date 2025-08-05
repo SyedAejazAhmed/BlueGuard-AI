@@ -1,6 +1,7 @@
 .vessel-icon {
   filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.2));
   transition: all 0.2s ease-in-out;
+  transform-origin: center bottom;
 }
 
 .vessel-icon:hover {
@@ -12,6 +13,7 @@
   filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.2));
   transition: all 0.2s ease-in-out;
   animation: pulse 2s infinite;
+  transform-origin: center bottom;
 }
 
 .vessel-icon-pulse:hover {
@@ -29,6 +31,85 @@
   100% {
     filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.2));
   }
+}
+
+/* Loading animation */
+@keyframes loading-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Error message animation */
+@keyframes slide-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.error-message {
+  animation: slide-in 0.3s ease-out;
+}
+
+/* Improve popup styling */
+.vessel-popup .leaflet-popup-content {
+  padding: 0.75rem;
+  min-width: 200px;
+}
+
+.vessel-popup .leaflet-popup-content-wrapper {
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+/* Smooth transitions for map elements */
+.leaflet-fade-anim .leaflet-tile,
+.leaflet-fade-anim .leaflet-popup {
+  transition: opacity 0.2s linear;
+}
+
+.leaflet-zoom-anim .leaflet-zoom-animated {
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Animation for export buttons */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Hover effects for export buttons */
+.export-button {
+  transition: all 0.2s ease-in-out;
+}
+
+.export-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Download panel styling */
+.download-panel {
+  backdrop-filter: blur(8px);
+  transition: all 0.3s ease-in-out;
 }
 
 .vessel-popup .leaflet-popup-content {

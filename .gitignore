@@ -21,3 +21,4 @@ model/anomaly_detection/ais_outputs/shap/
 model/anomaly_detection/ais_outputs/lime/
 sample_data.csv
 sample_vessel_data.csv
+ocean_vessel_data_10k.csv
