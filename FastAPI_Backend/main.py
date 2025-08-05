@@ -12,32 +12,41 @@ import json
 import io
 import httpx
 
-# Configure logging with more detailed format
+# Set up project paths first, before any imports
+import os
+import sys
+
+# Get the absolute paths
+current_dir = os.path.abspath(os.path.dirname(__file__))
+project_root = os.path.dirname(current_dir)
+
+# Add paths to sys.path if they're not already there
+if current_dir not in sys.path:
+    sys.path.insert(0, current_dir)
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+
+# Now configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
 
-# Set up project paths
-current_dir = os.path.abspath(os.path.dirname(__file__))
-project_root = os.path.dirname(current_dir)
-
-# Ensure both the project root and the FastAPI backend are in the path
-for path in [project_root, current_dir]:
-    if path not in sys.path:
-        sys.path.insert(0, path)
-
-# Log paths for debugging
+# Log the paths for debugging
 logger.info(f"Current directory: {current_dir}")
 logger.info(f"Project root: {project_root}")
 logger.info(f"Python path: {sys.path}")
 
-# Import your existing modules from the root project directory
+# Try importing the required modules
 try:
-    # First check if modules are available
-    import model
-    import geospatial
+    from model.model_utils.load_predict import router as model_router
+    from geospatial.geofencing.fence_utils import check_zone_violation
+    from geospatial.zone_violation_detector.detect_violation import detect_illegal_behavior as detect_violations
+    logger.info("Successfully imported required modules")
+except ImportError as e:
+    logger.error(f"Failed to import required modules: {str(e)}")
+    raise
     logger.info("Base modules found")
     
     # Then import specific components
@@ -446,6 +455,14 @@ def process_ais_data(df: pd.DataFrame) -> Dict[str, Any]:
         logger.error(f"AIS processing error: {str(e)}")
         return {'error': str(e)}
 
+# Create the FastAPI app instance
+app = FastAPI(
+    title="Maritime Surveillance API",
+    description="API for maritime vessel tracking and analysis",
+    version="1.0.0"
+)
+
+# Make the app instance available at the module level
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
