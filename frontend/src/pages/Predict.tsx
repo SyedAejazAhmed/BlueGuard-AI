@@ -135,10 +135,16 @@ const Predict = () => {
     try {
       const csvContent = await fetchCSV(csvUrl);
       setCsvData(csvContent);
-      toast.success("CSV data fetched from URL successfully!");
+      setNotification({ 
+        type: 'success', 
+        message: 'CSV data fetched from URL successfully!' 
+      });
     } catch (error) {
       console.error("URL fetch error:", error);
-      toast.error("Failed to fetch CSV from URL. Please check the URL and try again.");
+      setNotification({
+        type: 'error',
+        message: 'Failed to fetch CSV from URL. Please check the URL and try again.'
+      });
     }
   };
 

@@ -71,10 +71,20 @@ app = FastAPI(
 # CORS configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:8080", "http://127.0.0.1:8080"],
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:8080",
+        "http://127.0.0.1:8080",
+        "http://localhost:8081",
+        "http://127.0.0.1:8081",
+        "http://localhost:5173",
+        "http://127.0.0.1:5173"
+    ],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
+    expose_headers=["*"]
 )
 
 # Pydantic models for request/response
@@ -295,6 +305,60 @@ async def analyze_vessel(vessel_data: VesselData):
         logger.error(f"Vessel analysis error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Vessel analysis failed: {str(e)}")
 
+# CSV URL fetching endpoint
+@app.get("/api/fetch-csv/")
+async def fetch_csv_from_url(url: str):
+    """
+    Fetch CSV data from a URL
+    """
+    try:
+        logger.info(f"Attempting to fetch CSV from URL: {url}")
+        
+        # Convert GitHub URLs to raw format
+        if 'github.com' in url and '/blob/' in url:
+            url = url.replace('github.com', 'raw.githubusercontent.com')
+            url = url.replace('/blob/', '/')
+            logger.info(f"Converted GitHub URL to: {url}")
+        
+        async with httpx.AsyncClient() as client:
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                'Accept': 'text/csv,application/csv,text/plain,*/*'
+            }
+            
+            response = await client.get(url, headers=headers, follow_redirects=True)
+            response.raise_for_status()
+            
+            # Check if the response is actually CSV data
+            content_type = response.headers.get('content-type', '')
+            if not any(ct in content_type.lower() for ct in ['text/csv', 'application/csv', 'text/plain']):
+                logger.warning(f"Unexpected content type: {content_type}")
+            
+            content = response.text
+            if not content.strip():
+                raise HTTPException(status_code=400, detail="Empty CSV file")
+            
+            # Extract filename from URL
+            filename = url.split('/')[-1]
+            if not filename.endswith('.csv'):
+                filename = 'downloaded.csv'
+            
+            return {
+                "success": True,
+                "csv_data": content,
+                "filename": filename,
+                "content_type": content_type
+            }
+            
+    except httpx.HTTPStatusError as e:
+        logger.error(f"HTTP error fetching CSV: {str(e)}")
+        if e.response.status_code == 404:
+            raise HTTPException(status_code=404, detail="CSV file not found at the specified URL")
+        raise HTTPException(status_code=e.response.status_code, detail=f"HTTP error: {str(e)}")
+    except Exception as e:
+        logger.error(f"An unexpected error occurred: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch CSV: {str(e)}")
+
 # File upload endpoint for AIS data
 @app.post("/api/upload-ais/")
 async def upload_ais_data(file: UploadFile = File(...)):
@@ -328,23 +392,6 @@ async def upload_ais_data(file: UploadFile = File(...)):
     except Exception as e:
         logger.error(f"File upload error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"File processing failed: {str(e)}")
-
-@app.get("/api/fetch-csv/")
-async def fetch_csv_from_url(url: str):
-    """
-    Fetch CSV data from a URL
-    """
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(url)
-            response.raise_for_status()  # Raise an exception for bad status codes
-            return {"csv_data": response.text}
-    except httpx.RequestError as e:
-        logger.error(f"Error fetching CSV from {url}: {e}")
-        raise HTTPException(status_code=400, detail=f"Failed to fetch CSV from URL: {e}")
-    except Exception as e:
-        logger.error(f"An unexpected error occurred: {e}")
-        raise HTTPException(status_code=500, detail="An unexpected error occurred")
 
 # Helper functions to connect to your existing code
 async def call_model_prediction(input_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -455,14 +502,7 @@ def process_ais_data(df: pd.DataFrame) -> Dict[str, Any]:
         logger.error(f"AIS processing error: {str(e)}")
         return {'error': str(e)}
 
-# Create the FastAPI app instance
-app = FastAPI(
-    title="Maritime Surveillance API",
-    description="API for maritime vessel tracking and analysis",
-    version="1.0.0"
-)
-
-# Make the app instance available at the module level
+# Run the FastAPI application
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
