@@ -1,0 +1,50 @@
+.vessel-icon {
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.2));
+  transition: all 0.2s ease-in-out;
+}
+
+.vessel-icon:hover {
+  transform: scale(1.2);
+  filter: drop-shadow(0 2px 4px rgb(0 0 0 / 0.3));
+}
+
+.vessel-icon-pulse {
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.2));
+  transition: all 0.2s ease-in-out;
+  animation: pulse 2s infinite;
+}
+
+.vessel-icon-pulse:hover {
+  transform: scale(1.2);
+  filter: drop-shadow(0 2px 4px rgb(0 0 0 / 0.3));
+}
+
+@keyframes pulse {
+  0% {
+    filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.2));
+  }
+  50% {
+    filter: drop-shadow(0 0 8px rgb(220 38 38 / 0.5));
+  }
+  100% {
+    filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.2));
+  }
+}
+
+.vessel-popup .leaflet-popup-content {
+  padding: 0.5rem;
+  min-width: 200px;
+}
+
+.vessel-popup .leaflet-popup-content-wrapper {
+  border-radius: 0.5rem;
+}
+
+/* Zone styles */
+.leaflet-overlay-pane path {
+  transition: opacity 0.2s ease-in-out;
+}
+
+.leaflet-overlay-pane path:hover {
+  opacity: 0.9;
+}

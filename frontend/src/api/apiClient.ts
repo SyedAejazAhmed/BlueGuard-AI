@@ -41,4 +41,12 @@ export const apiClient = {
     });
     return response.data;
   },
+
+  // Fetch CSV from URL
+  fetchCSV: async (url: string) => {
+    const response = await axiosInstance.get(API_ENDPOINTS.FETCH_CSV, {
+      params: { url },
+    });
+    return response.data.csv_data;
+  },
 };

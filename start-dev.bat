@@ -1,0 +1,6 @@
+@echo off
+echo Starting FastAPI Backend...
+start cmd /k "cd FastAPI_Backend && uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
+
+echo Starting Frontend...
+start cmd /k "cd frontend && npm run dev"

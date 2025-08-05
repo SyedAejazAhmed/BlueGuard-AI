@@ -1,6 +1,6 @@
-
 import { useState } from "react";
 import { MapPin, Upload, AlertTriangle, Shield, FileText, Globe } from "lucide-react";
+import type { ZoneCheckResponse } from "@/api/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -14,13 +14,14 @@ import { MapView } from "@/components/MapView";
 import { Loader } from "@/components/Loader";
 import { checkZone } from "@/api/checkZone";
 import { toast } from "sonner";
+import { fetchCSV } from "@/api/apiService";
 
 const ZoneViolation = () => {
   const [loading, setLoading] = useState(false);
   const [csvData, setCsvData] = useState("");
   const [urlInput, setUrlInput] = useState("");
   const [uploadType, setUploadType] = useState("device");
-  const [zoneResults, setZoneResults] = useState(null);
+  const [zoneResults, setZoneResults] = useState<ZoneCheckResponse | null>(null);
   const [mapLayers, setMapLayers] = useState({
     mpa: true,
     eez: true,
@@ -48,10 +49,7 @@ const ZoneViolation = () => {
     }
 
     try {
-      const response = await fetch(urlInput);
-      if (!response.ok) throw new Error("Failed to fetch CSV");
-      
-      const csvContent = await response.text();
+      const csvContent = await fetchCSV(urlInput);
       setCsvData(csvContent);
       toast.success("CSV data fetched from URL successfully!");
     } catch (error) {
@@ -69,23 +67,68 @@ const ZoneViolation = () => {
     setLoading(true);
     try {
       // Parse CSV data
-      const lines = csvData.trim().split('\n');
-      const headers = lines[0].split(',').map(h => h.trim());
-      const data = lines.slice(1).map(line => {
-        const values = line.split(',').map(v => v.trim());
-        const obj = {};
-        headers.forEach((header, index) => {
-          obj[header] = values[index];
-        });
-        return obj;
-      });
+        const lines = csvData.trim().split('\n');
+        if (lines.length < 2) {
+          throw new Error("CSV file is empty or contains only headers");
+        }
+
+        // Parse headers and validate required columns
+        const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+        const latIndex = headers.indexOf('latitude');
+        const lonIndex = headers.indexOf('longitude');
+        
+        if (latIndex === -1 || lonIndex === -1) {
+          toast.error("CSV must contain 'latitude' and 'longitude' columns");
+          return;
+        }
+
+        const data = lines.slice(1)
+          .map((line, lineNum) => {
+            const values = line.split(',').map(v => v.trim());
+            if (values.length !== headers.length) {
+              toast.error(`Invalid CSV line ${lineNum + 2}: Wrong number of columns`);
+              return null;
+            }
+            
+            const lat = Number(values[latIndex]);
+            const lon = Number(values[lonIndex]);
+            
+            if (isNaN(lat) || isNaN(lon)) {
+              toast.error(`Invalid coordinates at line ${lineNum + 2}`);
+              return null;
+            }
+            
+            if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+              toast.error(`Coordinates out of range at line ${lineNum + 2}`);
+              return null;
+            }
+
+            const obj: Record<string, any> = {};
+            headers.forEach((header, index) => {
+              obj[header] = header === 'latitude' || header === 'longitude' 
+                ? Number(values[index])
+                : values[index];
+            });
+          
+          // Validate coordinates
+            return obj;
+          })
+          .filter((item): item is Record<string, any> => item !== null);
+
+        if (data.length === 0) {
+          toast.error("No valid vessel data found in CSV");
+          return;
+        }
 
       const result = await checkZone(data);
       setZoneResults(result);
       toast.success("Zone analysis completed!");
     } catch (error) {
       console.error("Zone check error:", error);
-      toast.error("Failed to analyze zones. Please try again.");
+      toast.error("Failed to analyze zones. Displaying mock data.");
+      if (error.results) {
+        setZoneResults(error);
+      }
     } finally {
       setLoading(false);
     }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { apiService } from '../api/apiService';
+import { apiClient } from '../api/apiClient';
 
 const VesselAnalyzer = () => {
   const [vesselData, setVesselData] = useState({
@@ -21,7 +21,7 @@ const VesselAnalyzer = () => {
 
   const testConnection = async () => {
     try {
-      const health = await apiService.healthCheck();
+      const health = await apiClient.healthCheck();
       console.log('Backend connection successful:', health);
     } catch (error) {
       console.error('Backend connection failed:', error.message);
@@ -35,7 +35,7 @@ const VesselAnalyzer = () => {
     
     try {
       // Call vessel analysis
-      const analysisResult = await apiService.analyzeVessel(vesselData);
+      const analysisResult = await apiClient.analyzeVessel(vesselData);
       setResults(analysisResult);
     } catch (error) {
       setError(error.message);
@@ -50,7 +50,7 @@ const VesselAnalyzer = () => {
     
     try {
       // Call vessel prediction
-      const predictionResult = await apiService.predictVessel(vesselData);
+      const predictionResult = await apiClient.predictVessel(vesselData);
       setResults(predictionResult);
     } catch (error) {
       setError(error.message);
@@ -65,7 +65,7 @@ const VesselAnalyzer = () => {
     
     try {
       // Check zone
-      const zoneResult = await apiService.checkZone(
+      const zoneResult = await apiClient.checkZoneViolations(
         vesselData.latitude, 
         vesselData.longitude
       );

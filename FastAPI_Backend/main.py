@@ -10,10 +10,10 @@ import logging
 from datetime import datetime
 import json
 import io
+import httpx
 
-# Add paths for your modules
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'model'))
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'geospatial'))
+# Add project root to the Python path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Import your existing modules
 from model.model_utils.load_predict import router as model_router
@@ -33,7 +33,7 @@ app = FastAPI(
 # CORS configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:8080", "http://127.0.0.1:8080"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -238,6 +238,23 @@ async def upload_ais_data(file: UploadFile = File(...)):
     except Exception as e:
         logger.error(f"File upload error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"File processing failed: {str(e)}")
+
+@app.get("/api/fetch-csv/")
+async def fetch_csv_from_url(url: str):
+    """
+    Fetch CSV data from a URL
+    """
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url)
+            response.raise_for_status()  # Raise an exception for bad status codes
+            return {"csv_data": response.text}
+    except httpx.RequestError as e:
+        logger.error(f"Error fetching CSV from {url}: {e}")
+        raise HTTPException(status_code=400, detail=f"Failed to fetch CSV from URL: {e}")
+    except Exception as e:
+        logger.error(f"An unexpected error occurred: {e}")
+        raise HTTPException(status_code=500, detail="An unexpected error occurred")
 
 # Helper functions to connect to your existing code
 async def call_model_prediction(input_data: Dict[str, Any]) -> Dict[str, Any]:

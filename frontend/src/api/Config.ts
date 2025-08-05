@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:8000').replace(/\/api$/, '');
 
 export const API_ENDPOINTS = {
   PREDICT: `${API_BASE_URL}/api/predict/`,
@@ -9,6 +9,7 @@ export const API_ENDPOINTS = {
   AGENTS_INFO: `${API_BASE_URL}/api/agents/info/`,
   ZONES_STATUS: `${API_BASE_URL}/api/zones/status/`,
   BATCH_ANALYZE: `${API_BASE_URL}/api/batch-analyze/`,
+  FETCH_CSV: `${API_BASE_URL}/api/fetch-csv/`,
 };
 
 export const API_CONFIG = {

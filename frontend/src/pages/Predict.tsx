@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Upload, Brain, Ship, BarChart3, Link as LinkIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,6 +12,7 @@ import { VesselCard } from "@/components/VesselCard";
 import { Loader } from "@/components/Loader";
 import { predictAgent } from "@/api/predictAgent";
 import { toast } from "sonner";
+import { fetchCSV } from "@/api/apiService";
 
 const Predict = () => {
   const [loading, setLoading] = useState(false);
@@ -80,6 +80,22 @@ const Predict = () => {
       toast.error("Failed to get prediction. Please try again.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleUrlFetch = async () => {
+    if (!csvUrl.trim()) {
+      toast.error("Please enter a valid URL");
+      return;
+    }
+
+    try {
+      const csvContent = await fetchCSV(csvUrl);
+      setCsvData(csvContent);
+      toast.success("CSV data fetched from URL successfully!");
+    } catch (error) {
+      console.error("URL fetch error:", error);
+      toast.error("Failed to fetch CSV from URL. Please check the URL and try again.");
     }
   };
 
@@ -292,17 +308,7 @@ const Predict = () => {
                           />
                           <Button
                             variant="outline"
-                            onClick={async () => {
-                              if (!csvUrl) return;
-                              try {
-                                const response = await fetch(csvUrl);
-                                const text = await response.text();
-                                setCsvData(text);
-                                toast.success("CSV data loaded from URL!");
-                              } catch (error) {
-                                toast.error("Failed to fetch CSV from URL");
-                              }
-                            }}
+                            onClick={handleUrlFetch}
                           >
                             Fetch
                           </Button>
