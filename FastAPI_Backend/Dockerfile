@@ -1,13 +1,24 @@
 FROM python:3.11-slim
 
+# Set working directory to /app
 WORKDIR /app
 
-COPY requirements.txt ./requirements.txt
-
+# Copy requirements and install dependencies
+COPY ../requirements.txt ./requirements.txt
 RUN pip install --upgrade pip && pip install -r requirements.txt
 
-COPY FastAPI_Backend ./FastAPI_Backend
+# Copy backend code
+COPY . ./FastAPI_Backend
 
+# Copy shared folders
+COPY ../model ./model
+COPY ../geospatial ./geospatial
+
+# Set PYTHONPATH so Python can resolve imports from /app
+ENV PYTHONPATH=/app
+
+# Expose port
 EXPOSE 8000
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+# Run the FastAPI app
+CMD ["uvicorn", "FastAPI_Backend.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

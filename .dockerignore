@@ -10,9 +10,9 @@ __pycache__/
 *.ipynb
 node_modules
 data/
-FASTAPI_Backend/geospatial/geofencing/shapefiles/eez_zones
-FASTAPI_Backend/geospatial/geofencing/shapefiles/mpa_zones
-FASTAPI_Backend/geospatial/geofencing/shapefiles/ports
+geospatial/geofencing/shapefiles/eez_zones
+geospatial/geofencing/shapefiles/mpa_zones
+geospatial/geofencing/shapefiles/ports
 folder_workflow.txt
 dataset_links.txt
 document.pdf
@@ -24,6 +24,6 @@ frontend/node_modules
 mongodb_config.txt
 backend/
 zone_violation_input_data.txt
-FASTAPI_Backend/model/anomaly_detection/ais.py
-FASTAPI_Backend/model/anomaly_detection/ais_outputs/shap/
-FASTAPI_Backend/model/anomaly_detection/ais_outputs/lime/
+model/anomaly_detection/ais.py
+model/anomaly_detection/ais_outputs/shap/
+model/anomaly_detection/ais_outputs/lime/
