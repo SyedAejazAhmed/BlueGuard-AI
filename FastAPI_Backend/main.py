@@ -16,6 +16,8 @@ import httpx
 import os
 import sys
 
+app = FastAPI()
+
 # Get the absolute paths
 current_dir = os.path.abspath(os.path.dirname(__file__))
 project_root = os.path.dirname(current_dir)
@@ -44,16 +46,7 @@ try:
     from geospatial.geofencing.fence_utils import check_zone_violation
     from geospatial.zone_violation_detector.detect_violation import detect_illegal_behavior as detect_violations
     logger.info("Successfully imported required modules")
-except ImportError as e:
-    logger.error(f"Failed to import required modules: {str(e)}")
-    raise
-    logger.info("Base modules found")
-    
-    # Then import specific components
-    from model.model_utils.load_predict import router as model_router
-    from geospatial.geofencing.fence_utils import check_zone_violation
-    from geospatial.zone_violation_detector.detect_violation import detect_illegal_behavior as detect_violations
-    logger.info("Successfully imported required module components")
+
 except ImportError as e:
     logger.error(f"Error importing modules: {str(e)}")
     logger.error(f"Please ensure model and geospatial packages are in: {project_root}")
