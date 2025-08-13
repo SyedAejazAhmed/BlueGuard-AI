@@ -298,52 +298,76 @@ async def analyze_vessel(vessel_data: VesselData):
         logger.error(f"Vessel analysis error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Vessel analysis failed: {str(e)}")
 
+import base64
+import requests
+
 # CSV URL fetching endpoint
 @app.get("/api/fetch-csv/")
-async def fetch_csv_from_url(url: str):
+def fetch_csv_from_url(url: str):
     """
     Fetch CSV data from a URL
     """
     try:
         logger.info(f"Attempting to fetch CSV from URL: {url}")
         
-        # Convert GitHub URLs to raw format
+        # If it's a GitHub URL, use the GitHub API
         if 'github.com' in url and '/blob/' in url:
-            url = url.replace('github.com', 'raw.githubusercontent.com')
-            url = url.replace('/blob/', '/')
-            logger.info(f"Converted GitHub URL to: {url}")
-        
-        async with httpx.AsyncClient() as client:
+            # Extract owner, repo, branch and path from URL
+            parts = url.split('/')
+            owner_index = parts.index('github.com') + 1
+            owner = parts[owner_index]
+            repo = parts[owner_index + 1]
+            blob_index = parts.index('blob')
+            branch = parts[blob_index + 1]
+            file_path = '/'.join(parts[blob_index + 2:])
+            
+            api_url = f"https://api.github.com/repos/{owner}/{repo}/contents/{file_path}?ref={branch}"
+            logger.info(f"Using GitHub API URL: {api_url}")
+            
+            headers = {
+                'Accept': 'application/vnd.github.v3+json',
+            }
+            
+            response = requests.get(api_url, headers=headers)
+            response.raise_for_status()
+            
+            data = response.json()
+            if 'content' not in data:
+                raise HTTPException(status_code=400, detail="'content' not found in GitHub API response")
+            
+            # Decode the base64 content
+            content = base64.b64decode(data['content']).decode('utf-8')
+            filename = file_path.split('/')[-1]
+            content_type = 'text/csv'
+
+        else:
+            # For non-GitHub URLs, use the previous logic
             headers = {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
                 'Accept': 'text/csv,application/csv,text/plain,*/*'
             }
             
-            response = await client.get(url, headers=headers, follow_redirects=True)
+            response = requests.get(url, headers=headers, allow_redirects=True)
             response.raise_for_status()
             
-            # Check if the response is actually CSV data
             content_type = response.headers.get('content-type', '')
             if not any(ct in content_type.lower() for ct in ['text/csv', 'application/csv', 'text/plain']):
                 logger.warning(f"Unexpected content type: {content_type}")
             
             content = response.text
-            if not content.strip():
-                raise HTTPException(status_code=400, detail="Empty CSV file")
-            
-            # Extract filename from URL
             filename = url.split('/')[-1]
-            if not filename.endswith('.csv'):
-                filename = 'downloaded.csv'
-            
-            return {
-                "success": True,
-                "csv_data": content,
-                "filename": filename,
-                "content_type": content_type
-            }
-            
-    except httpx.HTTPStatusError as e:
+
+        if not content.strip():
+            raise HTTPException(status_code=400, detail="Empty CSV file")
+        
+        return {
+            "success": True,
+            "csv_data": content,
+            "filename": filename,
+            "content_type": content_type
+        }
+        
+    except requests.exceptions.HTTPError as e:
         logger.error(f"HTTP error fetching CSV: {str(e)}")
         if e.response.status_code == 404:
             raise HTTPException(status_code=404, detail="CSV file not found at the specified URL")
