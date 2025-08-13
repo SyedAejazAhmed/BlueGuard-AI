@@ -29,5 +29,7 @@ model/anomaly_detection/ais_outputs/shap/
 model/anomaly_detection/ais_outputs/lime/
 
 # Keep model files
-!model/**/*.joblib
-!model/**/*.pkl
+!model/model_utils/ais/
+ocean_vessel_data_10k.csv
+sample_data.csv
+sample_vessel_data.csv
