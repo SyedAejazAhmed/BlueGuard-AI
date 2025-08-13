@@ -11,7 +11,7 @@ services:
       - "8000:8000"
     depends_on:
       - frontend
-    command: uvicorn FastAPI_Backend.main:app --host 0.0.0.0 --port 8000 --reload
+    command: uvicorn FastAPI_Backend.main:app --host 0.0.0.0 --port 8000
 
   # docker-compose.yml  (frontend block only)
   frontend:
