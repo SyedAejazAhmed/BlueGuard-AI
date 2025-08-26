@@ -58,7 +58,7 @@ uvicorn FastAPI_Backend.main:app --reload --host 0.0.0.0 --port 8000
 
 ```bash
 cd frontend
-npm install
+npm install --legacy-peer-deps
 npm run dev          # Opens on http://localhost:8080
 ```
 
