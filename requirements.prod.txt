@@ -1,24 +1,22 @@
-pandas
-numpy
+# Core API dependencies
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+python-multipart==0.0.6
+httpx==0.25.0
+requests==2.31.0
+
+# Data processing
+pandas==2.2.2
+numpy==1.26.4
 scikit-learn==1.4.2
 xgboost==2.0.3
-numba
-pyarrow
-dask
-fastparquet
-geopy
-geopandas
-fiona
-pyproj
-shapely
-rtree
-contextily
-psycopg2-binary
-python-dateutil
-pytz
-fastapi
-uvicorn[standard]
-pydantic
-python-multipart
-requests
-httpx
+joblib>=1.3.0
+
+# Geospatial dependencies
+geopandas==0.14.3
+shapely==2.0.3
+
+# Date handling
+python-dateutil==2.8.2
+pytz==2023.3

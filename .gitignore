@@ -17,3 +17,4 @@ model/anomaly_detection/ais.py
 model/anomaly_detection/ais_outputs/shap/
 model/anomaly_detection/ais_outputs/lime/
 ocean_vessel_data_10k.csv
+*.pdf

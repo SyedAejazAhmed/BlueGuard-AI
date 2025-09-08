@@ -7,7 +7,7 @@ const About = () => {
   const technologies = [
     { name: "PyTorch", category: "AI/ML", description: "Deep learning framework for neural networks" },
     { name: "GeoPandas", category: "Geospatial", description: "Geospatial data manipulation and analysis" },
-    { name: "Django REST", category: "Backend", description: "RESTful API development" },
+    { name: "FastAPI", category: "Backend", description: "CORS API development" },
     { name: "React", category: "Frontend", description: "Modern web interface" },
     { name: "WDPA", category: "Data", description: "World Database on Protected Areas" },
     { name: "Marine Regions", category: "Data", description: "Marine geospatial boundaries" },
@@ -251,7 +251,7 @@ const About = () => {
                 <div className="flex flex-wrap gap-2">
                   <Badge>PyTorch Models</Badge>
                   <Badge>GeoPandas Engine</Badge>
-                  <Badge>Django REST API</Badge>
+                  <Badge>FastAPI</Badge>
                   <Badge>React Frontend</Badge>
                   <Badge>PostgreSQL Database</Badge>
                   <Badge>Redis Caching</Badge>

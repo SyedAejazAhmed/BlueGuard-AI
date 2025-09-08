@@ -19,7 +19,7 @@ export const Footer = () => {
             </p>
             <div className="flex items-center space-x-4">
               <a
-                href="https://github.com"
+                href="https://github.com/SyedAejazAhmed/BlueGuard-AI"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-slate-300 hover:text-white transition-colors"
@@ -70,7 +70,7 @@ export const Footer = () => {
             <ul className="space-y-2 text-slate-300">
               <li>PyTorch AI Models</li>
               <li>GeoPandas Analysis</li>
-              <li>Django REST API</li>
+              <li>FastAPI</li>
               <li>React Frontend</li>
             </ul>
           </div>
